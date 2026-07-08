@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>El Jardín del Respeto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,900&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#1C4B43;
+    --bg-deep-2:#153a34;
+    --bg-soft:#F6F1E4;
+    --accent-gold:#E8A94C;
+    --accent-coral:#E76F51;
+    --accent-sage:#8FBC94;
+    --text-dark:#20342F;
+    --text-light:#F6F1E4;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    min-height:100vh;
+    background:radial-gradient(ellipse at top, var(--bg-deep-2), var(--bg-deep) 70%);
+    font-family:'Work Sans', sans-serif;
+    color:var(--text-light);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:32px 16px 24px;
+  }
+  h1,h2,h3{
+    font-family:'Fraunces', serif;
+    margin:0;
+  }
+  .wrap{
+    width:100%;
+    max-width:640px;
+  }
+  header{
+    text-align:center;
+    margin-bottom:18px;
+  }
+  header h1{
+    font-size:clamp(1.8rem, 5vw, 2.6rem);
+    font-weight:900;
+    letter-spacing:-0.01em;
+    color:var(--accent-gold);
+  }
+  header p{
+    margin:6px 0 0;
+    opacity:0.85;
+    font-size:0.95rem;
+  }
+
+  /* --- Jardín (signature element) --- */
+  .garden{
+    position:relative;
+    background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+    border:1px solid rgba(232,169,76,0.25);
+    border-radius:18px;
+    padding:18px 14px 10px;
+    margin-bottom:20px;
+  }
+  .garden-ground{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    height:74px;
+    border-bottom:3px solid #6b4a2a;
+    padding:0 4px;
+  }
+  .plot{
+    width:11%;
+    display:flex;
+    justify-content:center;
+    align-items:flex-end;
+    height:100%;
+  }
+  .plot svg{
+    width:100%;
+    height:auto;
+    transform:scaleY(0);
+    transform-origin:bottom;
+    transition:transform 0.6s cubic-bezier(.34,1.56,.64,1);
+  }
+  .plot.bloom svg{ transform:scaleY(1); }
+  .plot.wilt svg .flower-color{ fill:#8a8a7a; }
+
+  .garden-label{
+    text-align:center;
+    font-size:0.78rem;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    opacity:0.7;
+    margin-top:8px;
+  }
+
+  /* --- Cards --- */
+  .card{
+    background:var(--bg-soft);
+    color:var(--text-dark);
+    border-radius:18px;
+    padding:26px 24px;
+    box-shadow:0 18px 40px rgba(0,0,0,0.25);
+  }
+  .eyebrow{
+    font-size:0.78rem;
+    font-weight:600;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:#5c7d6f;
+    margin-bottom:6px;
+  }
+  .scenario{
+    font-family:'Fraunces', serif;
+    font-size:1.25rem;
+    font-weight:600;
+    line-height:1.4;
+    margin-bottom:20px;
+  }
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .option{
+    text-align:left;
+    background:#fff;
+    border:2px solid #e4ddc8;
+    border-radius:12px;
+    padding:13px 16px;
+    font-family:'Work Sans', sans-serif;
+    font-size:0.98rem;
+    color:var(--text-dark);
+    cursor:pointer;
+    transition:border-color 0.15s, transform 0.1s;
+  }
+  .option:hover:not(:disabled){
+    border-color:var(--accent-gold);
+    transform:translateY(-1px);
+  }
+  .option:disabled{ cursor:default; }
+  .option.correct{
+    background:#e9f4ea;
+    border-color:var(--accent-sage);
+  }
+  .option.incorrect{
+    background:#fceee9;
+    border-color:var(--accent-coral);
+  }
+
+  .feedback{
+    margin-top:16px;
+    padding:14px 16px;
+    border-radius:12px;
+    font-size:0.95rem;
+    line-height:1.45;
+    display:none;
+  }
+  .feedback.show{ display:block; }
+  .feedback.correct{ background:#e9f4ea; border-left:4px solid var(--accent-sage); }
+  .feedback.incorrect{ background:#fceee9; border-left:4px solid var(--accent-coral); }
+
+  .bottom-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:20px;
+  }
+  .progress-text{
+    font-size:0.85rem;
+    color:#5c7d6f;
+    font-weight:600;
+  }
+  button.next{
+    background:var(--accent-gold);
+    color:var(--text-dark);
+    border:none;
+    border-radius:999px;
+    padding:11px 22px;
+    font-weight:700;
+    font-size:0.95rem;
+    cursor:pointer;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.2s;
+  }
+  button.next.show{ opacity:1; pointer-events:auto; }
+  button.next:hover{ filter:brightness(1.05); }
+
+  /* start / end screens */
+  .center-card{ text-align:center; }
+  .center-card p{ line-height:1.55; margin:14px 0 20px; }
+  button.big{
+    background:var(--accent-gold);
+    color:var(--text-dark);
+    border:none;
+    border-radius:999px;
+    padding:14px 30px;
+    font-weight:700;
+    font-size:1.05rem;
+    cursor:pointer;
+  }
+  button.big:hover{ filter:brightness(1.05); }
+  .score-num{
+    font-family:'Fraunces', serif;
+    font-size:3.2rem;
+    font-weight:900;
+    color:var(--accent-sage);
+    margin:6px 0;
+  }
+
+  footer{
+    margin-top:28px;
+    text-align:center;
+    font-size:0.78rem;
+    line-height:1.6;
+    opacity:0.75;
+    max-width:520px;
+  }
+  footer strong{ color:var(--accent-gold); font-weight:600; }
+
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>🌱 El Jardín del Respeto</h1>
+    <p>Cada decisión respetuosa hace florecer una planta.</p>
+  </header>
+
+  <div class="garden">
+    <div class="garden-ground" id="gardenGround"></div>
+    <div class="garden-label" id="gardenLabel">Tu jardín — 0 de 8 plantas florecidas</div>
+  </div>
+
+  <!-- Pantalla de inicio -->
+  <div class="card center-card" id="startScreen">
+    <div class="eyebrow">Juego educativo</div>
+    <h2>¿Qué tan respetuoso/a sos?</h2>
+    <p>Vas a leer 8 situaciones de la vida cotidiana. Elegí la opción más respetuosa en cada una y mirá crecer tu jardín. Al final vas a descubrir tu nivel de respeto.</p>
+    <button class="big" id="startBtn">Comenzar a jugar</button>
+  </div>
+
+  <!-- Pantalla de juego -->
+  <div class="card hidden" id="gameScreen">
+    <div class="eyebrow" id="questionCounter">Situación 1 de 8</div>
+    <div class="scenario" id="scenarioText"></div>
+    <div class="options" id="optionsContainer"></div>
+    <div class="feedback" id="feedbackBox"></div>
+    <div class="bottom-row">
+      <div class="progress-text" id="scoreText">Aciertos: 0</div>
+      <button class="next" id="nextBtn">Siguiente →</button>
+    </div>
+  </div>
+
+  <!-- Pantalla final -->
+  <div class="card center-card hidden" id="endScreen">
+    <div class="eyebrow">Resultado final</div>
+    <h2 id="endTitle"></h2>
+    <div class="score-num" id="endScore"></div>
+    <p id="endMessage"></p>
+    <button class="big" id="restartBtn">Jugar de nuevo</button>
+  </div>
+
+  <footer>
+    Hecho por López Martínez, Ian Agustino<br>
+    Grupo de: Devetac Ismach, Juan Pablo. Galarza, Ruth Valentina. López Martínez, Ian Agustino. Maldonado Giménez, Emma.
+  </footer>
+</div>
+
+<script>
+const questions = [
+  {
+    scenario: "Un compañero de curso opina distinto a vos sobre un tema en clase. ¿Qué hacés?",
+    options: [
+      { text: "Lo escucho y explico mi punto de vista con calma, aunque no esté de acuerdo.", correct: true, feedback: "¡Muy bien! Escuchar opiniones distintas sin descalificar a la persona es una forma clave de respeto." },
+      { text: "Le digo que está equivocado y que no diga más pavadas.", correct: false, feedback: "Descalificar a alguien por pensar distinto no es respetuoso. Se puede disentir sin faltar el respeto." },
+      { text: "Me río delante de los demás para que se sienta mal.", correct: false, feedback: "Burlarse de otra persona lastima y rompe la confianza del grupo. Eso no es respeto." }
+    ]
+  },
+  {
+    scenario: "Estás en el recreo y ves que un chico nuevo está solo, sin hablar con nadie.",
+    options: [
+      { text: "Lo ignoro, no es mi problema.", correct: false, feedback: "Ignorar a alguien que se siente excluido también es una falta de respeto, aunque sea silenciosa." },
+      { text: "Me acerco, lo saludo y lo invito a sumarse al grupo.", correct: true, feedback: "¡Excelente! Incluir a quien se siente afuera es una de las formas más lindas de mostrar respeto." },
+      { text: "Le hago burla por ser nuevo.", correct: false, feedback: "Burlarse de alguien por ser distinto o nuevo genera exclusión y daño. No es respetuoso." }
+    ]
+  },
+  {
+    scenario: "Tu hermano/a menor te pide prestado tu juego favorito sin permiso y lo rompe sin querer.",
+    options: [
+      { text: "Le grito y lo insulto delante de toda la familia.", correct: false, feedback: "Reaccionar con insultos no soluciona nada y lastima a la otra persona." },
+      { text: "Hablo con calma, le explico por qué me molestó y buscamos una solución juntos.", correct: true, feedback: "¡Correcto! Expresar lo que sentís sin agredir es respetarte a vos y a la otra persona." },
+      { text: "Rompo algo suyo para que sienta lo mismo.", correct: false, feedback: "Responder con una venganza no resuelve el conflicto, solo lo empeora." }
+    ]
+  },
+  {
+    scenario: "En un trabajo grupal, una compañera propone una idea diferente a la tuya.",
+    options: [
+      { text: "Impongo mi idea porque estoy convencido/a de que es mejor.", correct: false, feedback: "Imponer sin escuchar no permite construir en grupo ni valorar los aportes de los demás." },
+      { text: "Escucho su idea, la valoro y buscamos combinar lo mejor de ambas propuestas.", correct: true, feedback: "¡Genial! Escuchar y construir en conjunto es respeto en acción dentro de un equipo." },
+      { text: "Le digo que su idea es mala frente a todo el grupo.", correct: false, feedback: "Criticar sin cuidado el aporte de alguien puede humillarlo y frena la colaboración." }
+    ]
+  },
+  {
+    scenario: "Ves basura en la plaza donde jugás con tus amigos.",
+    options: [
+      { text: "La dejo, no la tiré yo.", correct: false, feedback: "Cuidar los espacios compartidos también es una forma de respeto hacia la comunidad." },
+      { text: "La recojo y la tiro en el cesto de basura, aunque no sea mía.", correct: true, feedback: "¡Muy bien! Respetar el espacio de todos incluye cuidarlo, aunque el problema no lo hayas causado vos." },
+      { text: "Tiro más basura porque total ya está sucio.", correct: false, feedback: "Sumar más daño a un espacio compartido afecta a toda la comunidad." }
+    ]
+  },
+  {
+    scenario: "Tu abuelo te está contando una historia que ya escuchaste varias veces.",
+    options: [
+      { text: "Lo interrumpo y le digo que ya la sé.", correct: false, feedback: "Interrumpir a alguien mientras habla, sobre todo a una persona mayor, se siente como una falta de atención." },
+      { text: "Lo escucho con paciencia y le muestro interés, aunque ya la conozca.", correct: true, feedback: "¡Excelente! Escuchar con paciencia a los adultos mayores es una muestra hermosa de respeto." },
+      { text: "Me voy sin decir nada mientras habla.", correct: false, feedback: "Irse sin avisar mientras alguien te habla puede hacerlo sentir ignorado." }
+    ]
+  },
+  {
+    scenario: "Un amigo te cuenta un secreto importante y te pide que no se lo cuentes a nadie.",
+    options: [
+      { text: "Se lo cuento a otro amigo porque es muy gracioso.", correct: false, feedback: "Contar un secreto que te pidieron guardar rompe la confianza de la otra persona." },
+      { text: "Respeto su confianza y no se lo cuento a nadie.", correct: true, feedback: "¡Perfecto! Guardar la confianza de alguien es una forma esencial de respeto en la amistad." },
+      { text: "Lo uso para molestarlo delante de otros.", correct: false, feedback: "Usar la confianza de alguien en su contra es una traición grave al respeto." }
+    ]
+  },
+  {
+    scenario: "Alguien de otro país, con costumbres distintas a las tuyas, se suma a tu grupo de amigos.",
+    options: [
+      { text: "Le hago preguntas con curiosidad y aprendo sobre sus costumbres.", correct: true, feedback: "¡Muy bien! Interesarte por costumbres distintas con respeto enriquece a todo el grupo." },
+      { text: "Me burlo de su acento o sus costumbres.", correct: false, feedback: "Burlarse de las diferencias culturales de alguien es una falta grave de respeto." },
+      { text: "Lo dejo de lado porque 'no encaja' con el grupo.", correct: false, feedback: "Excluir a alguien por ser diferente va en contra del respeto a la diversidad." }
+    ]
+  }
+];
+
+let current = 0;
+let score = 0;
+
+const startScreen = document.getElementById('startScreen');
+const gameScreen = document.getElementById('gameScreen');
+const endScreen = document.getElementById('endScreen');
+const scenarioText = document.getElementById('scenarioText');
+const optionsContainer = document.getElementById('optionsContainer');
+const feedbackBox = document.getElementById('feedbackBox');
+const nextBtn = document.getElementById('nextBtn');
+const scoreText = document.getElementById('scoreText');
+const questionCounter = document.getElementById('questionCounter');
+const gardenGround = document.getElementById('gardenGround');
+const gardenLabel = document.getElementById('gardenLabel');
+
+const flowerSVG = `<svg viewBox="0 0 40 60" xmlns="http://www.w3.org/2000/svg">
+  <rect x="18" y="28" width="4" height="32" fill="#4a7a4a"/>
+  <g class="flower-color">
+    <circle cx="20" cy="18" r="6" fill="#E8A94C"/>
+    <circle cx="12" cy="18" r="6" fill="#E76F51"/>
+    <circle cx="28" cy="18" r="6" fill="#E76F51"/>
+    <circle cx="20" cy="10" r="6" fill="#8FBC94"/>
+    <circle cx="20" cy="26" r="6" fill="#8FBC94"/>
+  </g>
+  <circle cx="20" cy="18" r="5" fill="#F6F1E4"/>
+</svg>`;
+
+function buildGarden(){
+  gardenGround.innerHTML = '';
+  questions.forEach((_, i) => {
+    const plot = document.createElement('div');
+    plot.className = 'plot';
+    plot.id = 'plot-' + i;
+    plot.innerHTML = flowerSVG;
+    gardenGround.appendChild(plot);
+  });
+}
+
+function updateGardenLabel(){
+  gardenLabel.textContent = `Tu jardín — ${score} de ${questions.length} plantas florecidas`;
+}
+
+function showQuestion(){
+  const q = questions[current];
+  questionCounter.textContent = `Situación ${current + 1} de ${questions.length}`;
+  scenarioText.textContent = q.scenario;
+  optionsContainer.innerHTML = '';
+  feedbackBox.className = 'feedback';
+  feedbackBox.textContent = '';
+  nextBtn.classList.remove('show');
+
+  q.options.forEach((opt, idx) => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.textContent = opt.text;
+    btn.addEventListener('click', () => selectOption(idx));
+    optionsContainer.appendChild(btn);
+  });
+
+  scoreText.textContent = `Aciertos: ${score}`;
+}
+
+function selectOption(idx){
+  const q = questions[current];
+  const buttons = optionsContainer.querySelectorAll('.option');
+  buttons.forEach(b => b.disabled = true);
+
+  const chosen = q.options[idx];
+  buttons[idx].classList.add(chosen.correct ? 'correct' : 'incorrect');
+
+  const plot = document.getElementById('plot-' + current);
+
+  if (chosen.correct) {
+    score++;
+    plot.classList.add('bloom');
+  } else {
+    q.options.forEach((o, i) => { if (o.correct) buttons[i].classList.add('correct'); });
+    plot.classList.add('bloom', 'wilt');
+  }
+
+  feedbackBox.textContent = chosen.feedback;
+  feedbackBox.classList.add('show', chosen.correct ? 'correct' : 'incorrect');
+  updateGardenLabel();
+  scoreText.textContent = `Aciertos: ${score}`;
+  nextBtn.classList.add('show');
+}
+
+nextBtn.addEventListener('click', () => {
+  current++;
+  if (current < questions.length) {
+    showQuestion();
+  } else {
+    showEnd();
+  }
+});
+
+function showEnd(){
+  gameScreen.classList.add('hidden');
+  endScreen.classList.remove('hidden');
+  const total = questions.length;
+  document.getElementById('endScore').textContent = `${score}/${total}`;
+
+  let title, message;
+  if (score === total) {
+    title = "¡Jardín en plena floración! 🌸";
+    message = "Respondiste con respeto en todas las situaciones. Escuchás, incluís y cuidás a los demás y a tu entorno. ¡Seguí regando ese jardín todos los días!";
+  } else if (score >= total * 0.6) {
+    title = "Un jardín que crece bien 🌿";
+    message = "La mayoría de tus decisiones fueron respetuosas. Repasá los consejos de las situaciones que te costaron más para que tu jardín florezca todavía más.";
+  } else {
+    title = "Tu jardín necesita más agua 🌱";
+    message = "Todavía hay plantas por florecer. Volvé a jugar y prestá atención a los mensajes de cada situación: el respeto se practica todos los días, en cada decisión pequeña.";
+  }
+  document.getElementById('endTitle').textContent = title;
+  document.getElementById('endMessage').textContent = message;
+}
+
+document.getElementById('restartBtn').addEventListener('click', () => {
+  current = 0;
+  score = 0;
+  endScreen.classList.add('hidden');
+  gameScreen.classList.remove('hidden');
+  buildGarden();
+  updateGardenLabel();
+  showQuestion();
+});
+
+document.getElementById('startBtn').addEventListener('click', () => {
+  startScreen.classList.add('hidden');
+  gameScreen.classList.remove('hidden');
+  showQuestion();
+});
+
+buildGarden();
+updateGardenLabel();
+</script>
+
+</body>
+</html>
